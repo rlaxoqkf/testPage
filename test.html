@@ -133,10 +133,12 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
             const distanceKm = R * c; // 두 지점 간의 거리 (단위: km)
             const distanceM = distanceKm * 1000; // 거리 변환 (단위: m)
+            const remainDist = distanceM - 500;
             
             return {
                 distanceKm: distanceKm,
-                distanceM: distanceM
+                distanceM: distanceM,
+                remainDist : remainDist
             };
         }
 
@@ -254,11 +256,19 @@
             // 사용 예시
             const user_lat = position.coords.latitude; // 사용자 위치의 위도
             const user_lon = position.coords.longitude; // 사용자 위치의 경도
-            
+
             $('#my_location_lac').text(user_lat);
             $('#my_location_lon').text(user_lon);
 
             const distances = getDistanceFromLatLon(user_lat, user_lon, hospital_lat, hospital_lon);
+            let remain = 0;
+            let isRemain = false;
+            if(distances.remainDist > 500){
+                remain = distances.remainDist;
+                isRemain = true;
+            }else{
+                isRemain = false;
+            }
             $('#calc_km').text(`${distances.distanceKm.toFixed(2)}`)
             $('#calc_m').text(`${distances.distanceM.toFixed(0)}`)
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceKm.toFixed(2)} km`);
@@ -307,16 +317,27 @@
     <br>
     <br>
     <div>
-        목적지와 사용자 위치간 거리: <span id="calc_km"></span> km 
-        <br>
-        목적지와 사용자 위치간 거리: <span id="calc_m"></span> m
+        <div>
+            <div>
+                목적지와 사용자 위치간 거리: <span id="calc_km"></span> km 
+                <br>
+                목적지와 사용자 위치간 거리: <span id="calc_m"></span> m
+            </div>
+            <br>
+            <div>
+                현재 내 위치_위도: <span id="my_location_lac"></span>
+                <br>
+                현재 내 위치_경도: <span id="my_location_lon"></span>
+            </div>
+        </div>
+        <div>
+             <!-- 오차범위(500m라고 가정) 이내여야 승인이 가능하다고 할 때 / 몇미터 더 이동을 해야하는지 안내 = 남은 거리 위에 텍스트로 표시 -->
+            {isRemain ? (
+                남은 거리 : <span id="remain"></span><br>
+            )}
+        </div>
     </div>
-    <br>
-    <div>
-        현재 내 위치_위도: <span id="my_location_lac"></span>
-        <br>
-        현재 내 위치_경도: <span id="my_location_lon"></span>
-    </div>
+    
     <br>
     <button id="calc" onclick="javascript:checkGeolocationPermission();">계산하기</button>
     <br>
