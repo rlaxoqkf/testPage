@@ -261,18 +261,20 @@
             $('#my_location_lon').text(user_lon);
 
             const distances = getDistanceFromLatLon(user_lat, user_lon, hospital_lat, hospital_lon);
-            let remain = 0;
-            let isRemain = false;
-            if(distances.remainDist > 500){
-                remain = distances.remainDist;
-                isRemain = true;
-            }else{
-                isRemain = false;
-            }
+            
+          
+
             $('#calc_km').text(`${distances.distanceKm.toFixed(2)}`)
             $('#calc_m').text(`${distances.distanceM.toFixed(0)}`)
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceKm.toFixed(2)} km`);
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceM.toFixed(0)} m`);
+
+            if (distances.remainDist > 0) {
+                $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
+                $('#remain_div').show(); // 남은 거리를 보여주는 div를 보이게 합니다.
+            } else {
+                $('#remain_div').hide(); // 남은 거리가 0 이하인 경우 div를 숨깁니다.
+            }
         }
 
         function showError(error) {
@@ -330,11 +332,8 @@
                 현재 내 위치_경도: <span id="my_location_lon"></span>
             </div>
         </div>
-        <div>
-             <!-- 오차범위(500m라고 가정) 이내여야 승인이 가능하다고 할 때 / 몇미터 더 이동을 해야하는지 안내 = 남은 거리 위에 텍스트로 표시 -->
-            {isRemain ? (
-                남은 거리 : <span id="remain"></span><br>
-            )}
+        <div id="remain_div" style="display: none;">
+            남은 거리: <span id="remain"></span><br>
         </div>
     </div>
     
