@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB손해보험_거리계산</title>
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
+        import { getPerformance } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-performance.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyBuEUO2vPaf6P257Hl15SVhJ1cHvDKVumU",
+          authDomain: "mobileacc-6d508.firebaseapp.com",
+          projectId: "mobileacc-6d508",
+          storageBucket: "mobileacc-6d508.appspot.com",
+          messagingSenderId: "586703414695",
+          appId: "1:586703414695:web:01d9620fe2f45ad16dc282",
+          measurementId: "G-5C429VGFL1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const perf = getPerformance(app);
+
+        // 오늘 날짜를 'YYYY-MM-DD' 형식으로 가져오는 함수
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 마지막으로 저장된 접속 날짜 확인
+        const lastVisit = localStorage.getItem('lastVisit');
+        const today = getTodayDate();
+
+        // 디바이스 정보 수집 함수
+        function getDeviceInfo() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        const deviceType = /mobile|android|iphone|ipad|tablet/.test(userAgent) ? 'Mobile' : 'Desktop';
+            const os = navigator.platform;
+            const browser = userAgent;
+            let deviceModel = 'Unknown Model';
+
+            if (/android/.test(userAgent)) {
+                const modelMatch = userAgent.match(/; ([^;]+) build/);
+                if (modelMatch) {
+                    deviceModel = modelMatch[1].trim();
+                }
+            } else if (/iphone/.test(userAgent)) {
+                deviceModel = 'iPhone'; // iOS 기기는 모델명 구체적 추출이 어려움
+            } else if (/ipad/.test(userAgent)) {
+                deviceModel = 'iPad';
+            }
+
+            return {
+                deviceType: deviceType,
+                os: os,
+                browser: browser,
+                deviceModel: deviceModel
+            };
+        }
+
+        // 마지막 접속 날짜가 오늘이 아니면, 접속 이벤트 기록
+        if (lastVisit !== today) {
+            const deviceInfo = getDeviceInfo();
+            logEvent(analytics, '접속한_유저_수', {
+                date: today,
+                content_type: 'connect',
+                content_id: 'acc_qr',
+                device_type: deviceInfo.deviceType,
+                device_os: deviceInfo.os,
+                device_browser: deviceInfo.browser
+            });
+            localStorage.setItem('lastVisit', today); // 오늘 날짜로 업데이트
+        }
+    </script>
+    <script>
+        // 디바이스 정보 수집 함수
+        function getDeviceInfo() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const deviceType = /mobile|android|iphone|ipad|tablet/.test(userAgent) ? 'Mobile' : 'Desktop';
+            const os = navigator.platform;
+            const browser = userAgent;
+            let deviceModel = 'Unknown Model';
+
+            if (/android/.test(userAgent)) {
+                const modelMatch = userAgent.match(/; ([^;]+) build/);
+                if (modelMatch) {
+                    deviceModel = modelMatch[1].trim();
+                }
+            } else if (/iphone/.test(userAgent)) {
+                deviceModel = 'iPhone'; // iOS 기기는 모델명 구체적 추출이 어려움
+            } else if (/ipad/.test(userAgent)) {
+                deviceModel = 'iPad';
+            }
+
+            return {
+                deviceType: deviceType,
+                os: os,
+                browser: browser,
+                deviceModel: deviceModel
+            };
+        }
+
+        $(document).ready(function(){
+            var varUA = navigator.userAgent.toLowerCase();
+            document.getElementById("agent").innerHTML = varUA;
+
+            const deviceInfo = getDeviceInfo();
+
+            document.getElementById("deviceType").innerHTML = deviceInfo.deviceType;
+            document.getElementById("os").innerHTML = deviceInfo.os;
+            document.getElementById("browser").innerHTML = deviceInfo.browser;
+            document.getElementById("deviceModel").innerHTML = deviceInfo.deviceModel;
+
+        });
+
+        function getDistanceFromLatLon(user_lat, user_lon, hospital_lat, hospital_lon) {
+            const R = 6371; // 지구의 반지름 (단위: km)
+            const dLat = deg2rad(hospital_lat - user_lat);  // 위도 차이
+            const dLon = deg2rad(hospital_lon - user_lon);  // 경도 차이
+            const a = 
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(user_lat)) * Math.cos(deg2rad(hospital_lat)) * 
+                Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+            const distanceKm = R * c; // 두 지점 간의 거리 (단위: km)
+            const distanceM = distanceKm * 1000; // 거리 변환 (단위: m)
+            
+            return {
+                distanceKm: distanceKm,
+                distanceM: distanceM
+            };
+        }
+
+        function deg2rad(deg) {
+            return deg * (Math.PI / 180);
+        }
+
+        function checkGeolocationPermission() {
+            if (navigator.permissions) {
+                navigator.permissions.query({ name: 'geolocation' })
+                    .then(function (result) {
+                        if (result.state === 'granted') {
+                            console.log("Geolocation permission granted.");
+                            getDistance(); // 권한이 부여된 경우 위치 정보를 요청합니다.
+                        } else if (result.state === 'prompt') {
+                            requestGeolocationPermission(); // 권한 요청을 진행합니다.
+                            console.log("Geolocation permission not granted. User needs to grant access.");
+                        } else {
+                            alert("위치 조회를 위한 권한이 거부되어 있는 상태입니다. 브라우저 설정에서 위치 권한을 허용해 주세요.");
+                            console.log("Geolocation permission denied.");
+                        }
+                    })
+                    .catch(function (error) {
+                        console.log("Error checking geolocation permission: ", error);
+                    });
+            } else {
+                console.log("Permissions API is not supported by this browser.");
+                getDistance(); // Permissions API가 지원되지 않는 경우에도 위치 정보를 요청할 수 있습니다.
+            }
+        }
+
+        function requestGeolocationPermission() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        console.log("Geolocation permission granted.");
+                        getDistance(); // 위치 정보를 요청합니다.
+                    },
+                    function(error) {
+                        alert("서비스를 이용하기 위해서는 권한 허용이 필요합니다.");
+                        console.log("Error requesting geolocation permission: ", error);
+                    }
+                );
+            } else {
+                alert("현재 접속한 브라우저에서 위치 정보 조회를 지원하지 않습니다. 다른 브라우저를 통해 접속해 주세요.");
+                console.log("Geolocation is not supported by this browser.");
+            }
+        }
+        
+        function getDistance(){
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("현재 접속한 브라우저에서 위치 정보 조회를 지원하지 않습니다. 다른 브라우저를 통해 접속해 주세요.");
+                console.log("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position){
+            const selectElement = document.getElementById('place');
+            const selectedValue = selectElement.value;
+
+            if(selectedValue == ''){
+                alert("거리 계산 할 장소를 선택해주세요.");
+                return;
+            }
+            let hospital_lat = 0; // 병원의 위도
+            let hospital_lon = 0; // 병원의 경도
+
+            switch(selectedValue){
+                case '0': // 삼성동 삼성병원
+                    hospital_lat = 37.4881193;
+                    hospital_lon = 127.0849885;
+                    break;
+                case '1': // DB금융센터
+                    hospital_lat = 37.5057617;
+                    hospital_lon = 127.0547936;
+                    break;
+                case '2': // 강북삼성병원
+                    hospital_lat = 37.5683585;
+                    hospital_lon = 126.9674846;
+                    break;
+                case '3': // 파인에비뉴
+                    hospital_lat = 37.5657852;
+                    hospital_lon = 126.9887184;
+                    break;
+                case '4': // 예산_친척집
+                    hospital_lat = 36.711536;
+                    hospital_lon = 126.801872;
+                    break;
+                case '5': // 우리집
+                    hospital_lat = 37.5644184;
+                    hospital_lon = 126.9540157;
+                    break;
+                case '6': // 신촌세브란스
+                    hospital_lat = 37.5623371;
+                    hospital_lon = 126.9408692;
+                    break;
+                case '7': // 서울아산병원
+                    hospital_lat = 37.5265455;
+                    hospital_lon = 127.1081223;
+                    break;
+                case '8': // 서울대학교병원
+                    hospital_lat = 37.5795427;
+                    hospital_lon = 126.9990602;
+                    break;
+                case '9': // 서울성모병원
+                    hospital_lat = 37.5016116;
+                    hospital_lon = 127.0047678;
+                    break;
+                default:
+                    break;
+            }
+
+            // 사용 예시
+            const user_lat = position.coords.latitude; // 사용자 위치의 위도
+            const user_lon = position.coords.longitude; // 사용자 위치의 경도
+            
+            $('#my_location_lac').text(user_lat);
+            $('#my_location_lon').text(user_lon);
+
+            const distances = getDistanceFromLatLon(user_lat, user_lon, hospital_lat, hospital_lon);
+            $('#calc_km').text(`${distances.distanceKm.toFixed(2)}`)
+            $('#calc_m').text(`${distances.distanceM.toFixed(0)}`)
+            console.log(`병원과 사용자 위치간 거리: ${distances.distanceKm.toFixed(2)} km`);
+            console.log(`병원과 사용자 위치간 거리: ${distances.distanceM.toFixed(0)} m`);
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    alert("서비스 이용을 위해 위치 권한을 허용바랍니다. - 브라우저 설정에서 차단 해제 후 이용바랍니다.");
+                    console.log("User denied the request for Geolocation.");
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    alert("위치 정보를 찾을 수 없습니다. 인터넷 환경, 브라우저를 다시 확인 해주세요.");
+                    console.log("Location information is unavailable.");
+                    break;
+                case error.TIMEOUT:
+                    alert("위치 정보 조회처리 시간이 오래걸려 중지되었습니다. - 원활한 인터넷 환경에서 다시 조회 바랍니다.");
+                    console.log("The request to get user location timed out.");
+                    break;
+                case error.UNKNOWN_ERROR:
+                    alert("알 수 없는 에러가 발생하였습니다. 다른 브라우저를 이용해 주세요.");
+                    console.log("An unknown error occurred.");
+                    break;
+            }
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>두 지점간 거리계산 로직 산출</h1>
+    </header>
+    <select id="place">
+        <option value="">선택</option>
+        <option value="0">삼성병원(삼성동)</option>
+        <option value="1">DB금융센터(선릉)</option>
+        <option value="2">강북삼성병원(종로)</option>
+        <option value="3">파인에비뉴(을지로)</option>
+        <option value="4">예산_친척집(예산)</option>
+        <option value="5">우리집</option>
+        <option value="6">신촌세브란스(신촌동)</option>
+        <option value="7">서울아산병원</option>
+        <option value="8">서울대학교병원</option>
+        <option value="9">서울성모병원</option>
+    </select>
+    <br>
+    <br>
+    <div>
+        목적지와 사용자 위치간 거리: <span id="calc_km"></span> km 
+        <br>
+        목적지와 사용자 위치간 거리: <span id="calc_m"></span> m
+    </div>
+    <br>
+    <div>
+        현재 내 위치_위도: <span id="my_location_lac"></span>
+        <br>
+        현재 내 위치_경도: <span id="my_location_lon"></span>
+    </div>
+    <br>
+    <button id="calc" onclick="javascript:checkGeolocationPermission();">계산하기</button>
+    <br>
+    <div>
+        단말정보: <span id="agent"></span>
+    </div>
+    <div>
+        디바이스 타입 : <span id="deviceType"></span><br>
+        디바이스 OS : <span id="os"></span><br>
+        디바이스 브라우저 : <span id="browser"></span><br>
+        디바이스 모델 : <span id="deviceModel"></span><br>
+    </div>
+</body>
+</html>
