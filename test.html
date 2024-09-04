@@ -269,11 +269,38 @@
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceKm.toFixed(2)} km`);
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceM.toFixed(0)} m`);
 
-            if (distances.remainDist > 500) {
-                $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
-                $('#remain_div').show(); 
+            // 인증 메시지 및 이미지 표시
+            const certificationDiv = $('#certification');
+            const imageElement = $('#statusImage');
+
+            if (distances.distanceM <= 500) {
+                certificationDiv.html("<strong>인증되었습니다!</strong>");
+                imageElement.attr('src', 'images/certified.png').show(); // 인증 이미지 경로로 변경
             } else {
-                $('#remain_div').hide();
+                certificationDiv.empty(); // 인증 메시지 제거
+
+                if (distances.remainDist <= 500 && distances.remainDist > 0) {
+                    $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
+                    $('#remain_div').show();
+
+                    // 500m에서 1km
+                    imageElement.attr('src', 'images/almost_there.png').show(); // 해당 이미지 경로로 변경
+                } else if (distances.remainDist <= 4500 && distances.remainDist > 500) {
+                    $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
+                    $('#remain_div').show();
+
+                    // 1km에서 5km
+                    imageElement.attr('src', 'images/keep_going.png').show(); // 해당 이미지 경로로 변경
+                } else if (distances.remainDist > 4500) {
+                    $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
+                    $('#remain_div').show();
+
+                    // 5km 이상
+                    imageElement.attr('src', 'images/still_far.png').show(); // 해당 이미지 경로로 변경
+                } else {
+                    $('#remain_div').hide();
+                    imageElement.hide();
+                }
             }
         }
 
@@ -335,6 +362,9 @@
         <div id="remain_div" style="display: none;">
             남은 거리: <span id="remain"></span><br>
         </div>
+        <img id="statusImage" src="" alt="상태 이미지">
+        <div id="certification"></div>
+        
     </div>
     
     <br>
