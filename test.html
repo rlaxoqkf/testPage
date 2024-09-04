@@ -269,11 +269,11 @@
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceKm.toFixed(2)} km`);
             console.log(`병원과 사용자 위치간 거리: ${distances.distanceM.toFixed(0)} m`);
 
-            if (distances.remainDist > 0) {
+            if (distances.remainDist > 500) {
                 $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
-                $('#remain_div').show(); // 남은 거리를 보여주는 div를 보이게 합니다.
+                $('#remain_div').show(); 
             } else {
-                $('#remain_div').hide(); // 남은 거리가 0 이하인 경우 div를 숨깁니다.
+                $('#remain_div').hide();
             }
         }
 
@@ -318,7 +318,7 @@
     </select>
     <br>
     <br>
-    <div>
+    <div style="align-items: center;">
         <div>
             <div>
                 목적지와 사용자 위치간 거리: <span id="calc_km"></span> km 
