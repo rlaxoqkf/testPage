@@ -284,19 +284,19 @@
                     $('#remain_div').show();
 
                     // 500m에서 1km
-                    imageElement.attr('src', 'images/almost_there.png').show(); // 해당 이미지 경로로 변경
-                } else if (distances.remainDist <= 4500 && distances.remainDist > 500) {
+                    imageElement.attr('src', 'images/almost_there.png').show(); 
+                } else if (distances.remainDist <= 10000 && distances.remainDist > 500) {
                     $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
                     $('#remain_div').show();
 
                     // 1km에서 5km
-                    imageElement.attr('src', 'images/keep_going.png').show(); // 해당 이미지 경로로 변경
-                } else if (distances.remainDist > 4500) {
+                    imageElement.attr('src', 'images/keep_going.png').show(); 
+                } else if (distances.remainDist > 10000) {
                     $('#remain').text(`${distances.remainDist.toFixed(0)} m`);
                     $('#remain_div').show();
 
                     // 5km 이상
-                    imageElement.attr('src', 'images/still_far.png').show(); // 해당 이미지 경로로 변경
+                    imageElement.attr('src', 'images/still_far.png').show(); 
                 } else {
                     $('#remain_div').hide();
                     imageElement.hide();
